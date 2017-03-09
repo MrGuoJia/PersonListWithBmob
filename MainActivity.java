@@ -1,16 +1,11 @@
 package com.example.jia.personlistwithbmob;
-import android.Manifest;
-
-import android.content.pm.PackageManager;
-
-
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -22,8 +17,10 @@ import java.util.List;
 import cn.bmob.v3.Bmob;
 import cn.bmob.v3.BmobQuery;
 import cn.bmob.v3.datatype.BmobFile;
+import cn.bmob.v3.datatype.BmobQueryResult;
 import cn.bmob.v3.exception.BmobException;
 import cn.bmob.v3.listener.FindListener;
+import cn.bmob.v3.listener.SQLQueryListener;
 import cn.bmob.v3.listener.SaveListener;
 import cn.bmob.v3.listener.UploadFileListener;
 
@@ -31,14 +28,18 @@ public class MainActivity extends AppCompatActivity implements DeleteListener{
     private android.support.v7.widget.RecyclerView mView;
     private EditText name,age,address;
     private Button btn_save;
-    private ArrayList<Persion> list1=new ArrayList<Persion>();
+    private List<Persion> list1=new ArrayList<Persion>();
     private PersionAdapter adapter;
+    private EditText edt_search;
+    private Button btn_search;
+    private Button btn_pass;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        getPerssion();
+
+
         Bmob.initialize(this,"e3de5628cbe1d7a61ad73c433495a472");
         initViews();
         initList();
@@ -47,20 +48,6 @@ public class MainActivity extends AppCompatActivity implements DeleteListener{
     }
 
 
-    private void getPerssion() {
-        String[] permissins = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE};
-
-        if(ContextCompat.checkSelfPermission(MainActivity.this,Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
-           requestPermissions(permissins,1001);
-        }
-
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-    }
 
     private void initList() {
 
@@ -78,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements DeleteListener{
             public void done(List<Persion> list, BmobException e) {
                 if(e==null){
                     Toast.makeText(MainActivity.this,"共有"+list.size()+"条数据",Toast.LENGTH_SHORT).show();
-                        list1=(ArrayList) list;
+                        list1=list;
                         adapter.change(list1);
 
 
@@ -98,6 +85,10 @@ public class MainActivity extends AppCompatActivity implements DeleteListener{
         age= (EditText) findViewById(R.id.edit_age);
         address= (EditText) findViewById(R.id.edit_address);
         btn_save= (Button) findViewById(R.id.add);
+        edt_search= (EditText) findViewById(R.id.edt_search);
+        btn_search= (Button) findViewById(R.id.btn_search);
+        btn_pass= (Button) findViewById(R.id.btn_pass);
+
         btn_save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -138,12 +129,36 @@ public class MainActivity extends AppCompatActivity implements DeleteListener{
                         }
                     }
                 });
+            }
+        });
+        btn_search.setOnClickListener(new View.OnClickListener() { //用于搜索
+            @Override
 
+            public void onClick(View v) {
+                int msg=Integer.parseInt(edt_search.getText().toString()) ;
+                Toast.makeText(MainActivity.this,""+msg,Toast.LENGTH_SHORT).show();
+                String bql="select * from Persion where age = "+ msg;//用 name 在Bmob 中调用貌似不可以
+                new BmobQuery<Persion>().doSQLQuery(bql, new SQLQueryListener<Persion>() {
+                    @Override
+                    public void done(BmobQueryResult<Persion> bmobQueryResult, BmobException e) {
+                        if(e==null){
+                            List<Persion> results=bmobQueryResult.getResults();
+                            adapter.change(results);
 
-
+                        }else{
+                            Log.i("MainActivity----------",e.toString());
+                        }
+                    }
+                });
             }
         });
 
+        btn_pass.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity( new Intent(MainActivity.this,LoginActivity.class));
+            }
+        });
     }
 
     @Override

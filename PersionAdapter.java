@@ -14,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 
+import com.bumptech.glide.Glide;
 
 import java.io.IOException;
 
@@ -22,11 +23,7 @@ import java.util.List;
 
 import cn.bmob.v3.exception.BmobException;
 import cn.bmob.v3.listener.UpdateListener;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+
 
 /**
  * Created by jia on 2017/3/6.
@@ -36,7 +33,7 @@ public class PersionAdapter extends RecyclerView.Adapter<PersionAdapter.ViewHold
         private List<Persion> mPersions;
         private DeleteListener listener;
         private Bitmap bitmap;
-    public void change(ArrayList<Persion> list1) {
+    public void change(List<Persion> list1) {
             mPersions=list1;
             notifyDataSetChanged();
     }
@@ -70,7 +67,11 @@ public class PersionAdapter extends RecyclerView.Adapter<PersionAdapter.ViewHold
         final Persion persion = mPersions.get(position);
 
         String ImageUrl=persion.getHeadImg().getFileUrl();
-        OkHttpClient client=new OkHttpClient();
+        if(persion.getHeadImg()!=null){
+            Glide.with(holder.headView.getContext()).load(ImageUrl).into(holder.headView);
+        }
+
+        /*OkHttpClient client=new OkHttpClient();读取网上图片的另外一种方法
         Request request=new Request.Builder().url(ImageUrl).build();
         Call call=client.newCall(request);
         call.enqueue(new Callback() {
@@ -85,10 +86,9 @@ public class PersionAdapter extends RecyclerView.Adapter<PersionAdapter.ViewHold
                 bitmap=BitmapFactory.decodeByteArray(bytes,0,bytes.length);
 
             }
-        });
+        });*/
 
 
-        holder.headView.setImageBitmap(bitmap);
 
         holder.name.setText(persion.getName());
         holder.age.setText(String.valueOf(persion.getAge()));
